@@ -2,34 +2,55 @@ import React, { useContext } from "react";
 
 const ItemContext = React.createContext();
 
-export const useContextItems = (location, options) => {
-  const showItems = useContext(ItemContext);
+const buildDescriptors = (items, location, options) => {
+  return items;
+};
 
-  return (evt) => {
-    showItems(evt, buildDescriptors(location, options));
+export const useContextItems = (location, options) => {
+  const { showItems, itemHandler, items } = useContext(ItemContext);
+
+  return {
+    handleItemClick: itemHandler,
+    showItems: (evt) =>
+      showItems(evt, buildDescriptors(items, location, options))
   };
 };
 
-const buildDescriptors = (location, options) => {
-  return [{ location, options }];
-};
+const NO_INHERITED_CONTEXT = { items: [] };
 
-const Provider = ({ children, showItems }) => {
-  const handleShowItems = (e, itemDescriptors) => {
-    return [];
+const Provider = ({
+  children,
+  itemHandler,
+  items,
+  context: { items: inheritedItems } = NO_INHERITED_CONTEXT
+}) => {
+  const handleShowItems = (e, items) => {
+    return items;
   };
   return (
-    <ItemContext.Provider value={handleShowItems}>
+    <ItemContext.Provider
+      value={{
+        itemHandler,
+        items: inheritedItems.concat(items),
+        showItems: handleShowItems
+      }}
+    >
       {children}
     </ItemContext.Provider>
   );
 };
 
-export const ContextItemProvider = ({ children }) => {
+export const ContextItemProvider = ({ children, itemHandler, items }) => {
   return (
     <ItemContext.Consumer>
       {(parentContext) => (
-        <Provider showItems={parentContext}>{children}</Provider>
+        <Provider
+          items={items}
+          context={parentContext}
+          itemHandler={itemHandler}
+        >
+          {children}
+        </Provider>
       )}
     </ItemContext.Consumer>
   );
