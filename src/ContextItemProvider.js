@@ -10,6 +10,7 @@ export const useContextItems = (location, options) => {
   const { showItems, itemHandler, items } = useContext(ItemContext);
 
   return {
+    items,
     handleItemClick: itemHandler,
     showItems: (evt) =>
       showItems(evt, buildDescriptors(items, location, options))
@@ -22,15 +23,29 @@ const Provider = ({
   children,
   itemHandler,
   items,
-  context: { items: inheritedItems } = NO_INHERITED_CONTEXT
+  context: {
+    items: inheritedItems,
+    itemHandler: inheritedItemHandler
+  } = NO_INHERITED_CONTEXT
 }) => {
   const handleShowItems = (e, items) => {
     return items;
   };
+
+  const handleItem = (e, item) => {
+    if (itemHandler && itemHandler(e, item)) {
+      return true;
+    }
+
+    if (inheritedItemHandler) {
+      inheritedItemHandler(e, item);
+    }
+  };
+
   return (
     <ItemContext.Provider
       value={{
-        itemHandler,
+        itemHandler: handleItem,
         items: inheritedItems.concat(items),
         showItems: handleShowItems
       }}

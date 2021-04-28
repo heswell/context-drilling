@@ -3,13 +3,32 @@ import { ContextItemProvider, useContextItems } from "./ContextItemProvider";
 
 import "./Component.css";
 
-const Component = ({ children, items: contextItems }) => {
-  const [items, setItems] = useState([]);
-  const { showItems, handleItemClick } = useContextItems("1", {});
+const defaultItems = ["Item A", "Item B"];
 
+const Component = ({ children, id, items: contextItems = [] }) => {
+  const [items, setItems] = useState([]);
+  const {
+    items: inheritedContextItems = [],
+    // showItems,
+    handleItemClick
+  } = useContextItems("1", {});
+
+  const allItems = inheritedContextItems
+    .concat(contextItems)
+    .concat(defaultItems);
   const handleClick = (e) => {
-    const items = showItems(e);
-    setItems(items);
+    // const items = showItems(e);
+    setItems(allItems);
+  };
+
+  const handleItem = (e, item) => {
+    e.stopPropagation();
+    if (contextItems.includes(item) || defaultItems.includes(item)) {
+      console.log(`Component #${id} handle item >>>>>>  ${item}`);
+      return true;
+    } else {
+      return handleItemClick(e, item);
+    }
   };
 
   const component = (
@@ -18,13 +37,14 @@ const Component = ({ children, items: contextItems }) => {
         className="div-items"
         style={{ width: 120, borderRight: "solid 1px #999" }}
       >
+        <div>Component {id}</div>
         {items.length === 0
           ? "No Items"
           : items.map((item, idx) => (
               <div
                 className="Item"
                 key={idx}
-                onClick={(e) => handleItemClick(e, item)}
+                onClick={(e) => handleItem(e, item)}
               >
                 {item}
               </div>
@@ -37,7 +57,9 @@ const Component = ({ children, items: contextItems }) => {
   );
 
   return contextItems ? (
-    <ContextItemProvider items={contextItems}>{component}</ContextItemProvider>
+    <ContextItemProvider items={contextItems} itemHandler={handleItem}>
+      {component}
+    </ContextItemProvider>
   ) : (
     component
   );
